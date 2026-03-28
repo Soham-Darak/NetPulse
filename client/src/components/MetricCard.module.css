@@ -1,0 +1,118 @@
+.card {
+  background: rgba(13, 17, 23, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.08);
+}
+
+.extra {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.featured {
+  border-color: rgba(56, 189, 248, 0.25);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(14, 165, 233, 0.05) 100%);
+}
+
+.featured::before {
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.4;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+}
+
+.value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.number {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+  font-family: var(--font-mono);
+}
+
+.featured .number { font-size: 64px; }
+
+.unit {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+
+.subItem { display: flex; align-items: center; gap: 5px; }
+
+.subLabel {
+  color: var(--text-dim);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: var(--font-mono);
+}
+
+.subVal {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.sep { color: var(--text-dim); }
+
+.bar {
+  height: 2px;
+  background: var(--border2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 99px;
+  box-shadow: 0 0 6px var(--cyan-glow);
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

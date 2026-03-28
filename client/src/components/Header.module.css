@@ -1,0 +1,79 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 32px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 40px;
+}
+
+.logo { display: flex; align-items: center; gap: 12px; }
+
+.logoIcon {
+  font-size: 24px;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 8px var(--cyan-glow));
+  animation: pulseIcon 3s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--cyan-glow)); opacity: 1; }
+  50%       { filter: drop-shadow(0 0 14px var(--cyan-glow)); opacity: 0.85; }
+}
+
+.logoText {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #e2e8f0 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.right { display: flex; align-items: center; gap: 16px; }
+
+.qualityBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.4s ease;
+}
+
+.qualityDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.good  .qualityDot     { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.moderate .qualityDot  { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.poor  .qualityDot     { background: var(--red);   box-shadow: 0 0 8px var(--red);   }
+
+.good     { border-color: rgba(74, 222, 128, 0.3); }
+.moderate { border-color: rgba(251, 191, 36, 0.3); }
+.poor     { border-color: rgba(248, 113, 113, 0.3); }
+
+.serverInfo {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; gap: 14px; align-items: flex-start; }
+}

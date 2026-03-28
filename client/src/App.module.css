@@ -1,0 +1,33 @@
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* Featured download card spans full width */
+  .metrics > :nth-child(2) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .metrics > :nth-child(2) {
+    grid-column: 1;
+  }
+}

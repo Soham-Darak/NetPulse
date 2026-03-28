@@ -1,0 +1,43 @@
+.grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+}
+
+.orb1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #0ea5e9, transparent);
+  top: -150px; right: -100px;
+}
+
+.orb2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, #3b82f6, transparent);
+  bottom: 10%; left: -120px;
+}
+
+.orb3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, #06b6d4, transparent);
+  top: 40%; right: 20%;
+}
