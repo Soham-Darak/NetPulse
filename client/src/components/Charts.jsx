@@ -17,28 +17,29 @@ ChartJS.register(
 );
 
 ChartJS.defaults.font.family = "'JetBrains Mono', monospace";
-ChartJS.defaults.color = '#475569';
+ChartJS.defaults.color = '#94a3b8';
 
 const baseOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  animation: { duration: 250, easing: 'easeOutCubic' },
+  animation: { duration: 400, easing: 'easeOutQuart' },
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: '#0d1117',
-      borderColor: 'rgba(56,189,248,0.2)',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderColor: 'rgba(56,189,248,0.3)',
       borderWidth: 1,
-      titleColor: '#64748b',
-      bodyColor: '#e2e8f0',
-      padding: 10,
+      titleColor: '#94a3b8',
+      bodyColor: '#f8fafc',
+      padding: 12,
+      cornerRadius: 8,
     },
   },
   scales: {
     x: { display: false },
     y: {
-      grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-      ticks: { font: { size: 10 }, color: '#334155', maxTicksLimit: 5 },
+      grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+      ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 5 },
       border: { display: false },
       min: 0,
     },
@@ -71,17 +72,17 @@ export default function Charts({ pingChartData, speedChartData }) {
     labels: speedChartData.labels,
     datasets: [
       {
-        label: 'Download',
+        label: 'Download Speed',
         data: speedChartData.dl,
-        backgroundColor: 'rgba(56,189,248,0.6)',
+        backgroundColor: 'rgba(56,189,248,0.8)',
         borderColor: '#38bdf8',
         borderWidth: 1,
         borderRadius: 4,
       },
       {
-        label: 'Upload',
+        label: 'Upload Speed',
         data: speedChartData.ul,
-        backgroundColor: 'rgba(74,222,128,0.5)',
+        backgroundColor: 'rgba(74,222,128,0.8)',
         borderColor: '#4ade80',
         borderWidth: 1,
         borderRadius: 4,
@@ -97,7 +98,7 @@ export default function Charts({ pingChartData, speedChartData }) {
         display: true,
         position: 'top',
         align: 'end',
-        labels: { color: '#475569', font: { size: 10 }, boxWidth: 10, padding: 12 },
+        labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12, padding: 12, usePointStyle: true },
       },
     },
   }), []);
@@ -106,8 +107,11 @@ export default function Charts({ pingChartData, speedChartData }) {
     <div className={styles.grid}>
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          <span className={styles.title}>Ping Timeline</span>
-          <span className={styles.badge}>LIVE</span>
+          <div className={styles.titleWrap}>
+            <span className={styles.title}>Response Time History</span>
+            <span className={styles.subtitle}>Delay fluctuations over time</span>
+          </div>
+          <span className={styles.badge}>ms</span>
         </div>
         <div className={styles.chartWrap}>
           <Line data={pingData} options={baseOptions} />
@@ -116,7 +120,10 @@ export default function Charts({ pingChartData, speedChartData }) {
 
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          <span className={styles.title}>Throughput</span>
+           <div className={styles.titleWrap}>
+            <span className={styles.title}>Network Speed Trends</span>
+            <span className={styles.subtitle}>Recent download/upload tests</span>
+          </div>
           <span className={styles.badge}>Mbps</span>
         </div>
         <div className={styles.chartWrap}>

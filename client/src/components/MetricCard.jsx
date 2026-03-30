@@ -3,18 +3,26 @@ import AnimatedNumber from './AnimatedNumber';
 import { barPct } from '../utils/format';
 import styles from './MetricCard.module.css';
 
-export default function MetricCard({ label, value, unit, stats, barMax, featured, children }) {
+export default function MetricCard({ title, subtitle, icon, value, unit, stats, barMax, featured, active, children }) {
   const pct = barPct(value, barMax);
 
   return (
-    <div className={`${styles.card} ${featured ? styles.featured : ''}`}>
-      <div className={styles.label}>{label}</div>
+    <div className={`${styles.card} ${featured ? styles.featured : ''} ${active ? styles.active : ''}`}>
+      <div className={styles.header}>
+        <div className={styles.iconWrap}>{icon}</div>
+        <div className={styles.titleWrap}>
+          <div className={styles.title}>{title}</div>
+          {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
+        </div>
+      </div>
 
-      <div className={styles.value}>
-        <span className={styles.number}>
-          <AnimatedNumber value={value} decimals={unit === 'ms' ? 0 : 1} />
-        </span>
-        <span className={styles.unit}>{unit}</span>
+      <div className={styles.valueWrap}>
+        <div className={styles.value}>
+          <span className={styles.number}>
+            <AnimatedNumber value={value} decimals={unit === 'ms' ? 0 : 1} />
+          </span>
+          <span className={styles.unit}>{unit}</span>
+        </div>
       </div>
 
       {children && <div className={styles.extra}>{children}</div>}

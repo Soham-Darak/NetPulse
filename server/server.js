@@ -142,8 +142,8 @@ wss.on('connection', (ws) => {
   ws.on('message', (raw) => {
     try {
       const msg = JSON.parse(raw);
-      // Broadcast test results to all other connected clients
-      if (msg.type === 'result') {
+      // Broadcast test results and data usage to all other connected clients
+      if (msg.type === 'result' || msg.type === 'data_usage') {
         wss.clients.forEach((client) => {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(msg));
