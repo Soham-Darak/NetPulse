@@ -206,6 +206,10 @@ export function useNetworkMonitor() {
         const { done, value } = await reader.read();
         if (done) break;
         totalBytes += value.byteLength;
+        
+        window.dispatchEvent(new CustomEvent('netpulse_live_chunk', { 
+          detail: { type: 'download', bytes: value.byteLength } 
+        }));
 
         const elapsed = (performance.now() - start) / 1000;
         const pct = Math.min(45, 25 + Math.round((totalBytes / contentLength) * 20));
@@ -259,8 +263,17 @@ export function useNetworkMonitor() {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload-test', true);
         
+        let lastLoaded = 0;
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
+            const chunk = event.loaded - lastLoaded;
+            if (chunk > 0) {
+              window.dispatchEvent(new CustomEvent('netpulse_live_chunk', { 
+                detail: { type: 'upload', bytes: chunk } 
+              }));
+              lastLoaded = event.loaded;
+            }
+            
             const elapsed = (performance.now() - start) / 1000;
             if (elapsed > 0.1) {
               const liveSpeed = parseFloat(((event.loaded * 8) / elapsed / 1_000_000).toFixed(2));
