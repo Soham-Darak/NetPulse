@@ -1,13 +1,14 @@
 import React from 'react';
+import { Globe, Building2, MapPin, Radio, Wifi } from 'lucide-react';
 import styles from './ConnectionInfo.module.css';
 
 export default function ConnectionInfo({ info }) {
   const items = [
-    { icon: '🌐', label: 'IP Address', value: info.ip },
-    { icon: '🏢', label: 'ISP', value: info.isp },
-    { icon: '📍', label: 'Location', value: info.city && info.country ? `${info.city}, ${info.country}` : null },
-    { icon: '📡', label: 'Type', value: info.effectiveType?.toUpperCase() || info.type },
-    { icon: '📶', label: 'Est. Downlink', value: info.downlink ? `${info.downlink} Mbps` : null },
+    { icon: <Globe size={18} />, label: 'IP Address', value: info.ip },
+    { icon: <Building2 size={18} />, label: 'Internet Provider', value: info.isp },
+    { icon: <MapPin size={18} />, label: 'Location', value: info.city && info.country ? `${info.city}, ${info.country}` : null },
+    { icon: <Radio size={18} />, label: 'Connection Type', value: info.effectiveType?.toUpperCase() || info.type },
+    { icon: <Wifi size={18} />, label: 'Estimated Max Speed', value: info.downlink ? `${info.downlink} Mbps` : null },
   ].filter(item => item.value);
 
   if (items.length === 0) return null;
@@ -15,8 +16,8 @@ export default function ConnectionInfo({ info }) {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <span className={styles.title}>Connection Details</span>
-        <span className={styles.badge}>LIVE</span>
+        <span className={styles.title}>Network Information</span>
+        <span className={styles.badge}>Connected</span>
       </div>
       <div className={styles.grid}>
         {items.map((item, i) => (

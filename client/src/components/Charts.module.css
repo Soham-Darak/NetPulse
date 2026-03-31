@@ -6,7 +6,7 @@
 }
 
 .card {
-  background: rgba(13, 17, 23, 0.7);
+  background: rgba(13, 17, 23, 0.5);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
@@ -16,34 +16,45 @@
 
 .cardHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 20px;
 }
 
+.titleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: var(--text);
 }
 
+.subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .badge {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  color: var(--cyan);
-  background: var(--cyan-dim);
-  padding: 3px 8px;
-  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
   font-family: var(--font-mono);
 }
 
 .chartWrap {
   position: relative;
-  height: 180px;
+  height: 200px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .grid { grid-template-columns: 1fr; }
 }
