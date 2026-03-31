@@ -351,6 +351,14 @@
   color: var(--text);
 }
 
+.chartSubtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
 .chartBadge {
   font-size: 10px;
   font-weight: 700;

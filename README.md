@@ -134,3 +134,7 @@ As you utilize the Monitor, the **Live Data Transfer Timeline** flatlines on 0 f
 ### 3. Doughnut Categorization Verification
 If left running perfectly stable, your **Data by Source Category Graph** immediately skews massively favoring the element mapped as **"Download Tests"**.
 * **The Cause:** Every continuous 10-second request pulls `x` MB of payload tracking. Due to NetPulse restricting system limits via the explicit **10 Minute Rolling Window Purge**, the graph will max out roughly equating to the total mass of the 60 downloads triggered specifically over the last exactly monitored 600-second timeline. It demonstrates flawless garbage tracking.
+
+### 4. Continuous Flow Precision (The Live Updates)
+If you monitor the **Live Data Transfer Timeline**, you will notice the precise incoming (solid blue) and outgoing (dotted yellow) curves no longer stutter.
+* **The Cause:** Through the specific engineering of `ReadableStream` and `XMLHttpRequest.upload.onprogress`, we generate real-time bytestream math. Standard charts experience boundary-clipping with jittery data, but through implementing `cubicInterpolationMode: 'monotone'` constraints along the y-axis, the chart transforms raw mid-stream packets into a perfectly uniform, exquisite flowing UI line that behaves reliably over the rolling 10-minute window.

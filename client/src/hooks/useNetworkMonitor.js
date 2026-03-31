@@ -211,6 +211,11 @@ export function useNetworkMonitor() {
         const pct = Math.min(45, 25 + Math.round((totalBytes / contentLength) * 20));
         setProgress(pct);
 
+        if (elapsed > 0.1) {
+          const liveSpeed = parseFloat(((totalBytes * 8) / elapsed / 1_000_000).toFixed(2));
+          setDownloadSpeed(liveSpeed);
+        }
+
         if (elapsed >= MAX_DUR) {
           reader.cancel();
           break;
@@ -249,21 +254,46 @@ export function useNetworkMonitor() {
       const blob = new Blob([data], { type: 'application/octet-stream' });
 
       const start = performance.now();
-      await fetch('/upload-test', { method: 'POST', body: blob });
-      const duration = (performance.now() - start) / 1000;
-      if (duration < 0.05) return null;
+      
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload-test', true);
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const elapsed = (performance.now() - start) / 1000;
+            if (elapsed > 0.1) {
+              const liveSpeed = parseFloat(((event.loaded * 8) / elapsed / 1_000_000).toFixed(2));
+              setUploadSpeed(liveSpeed);
+            }
+            const pct = Math.min(90, 65 + Math.round((event.loaded / event.total) * 25));
+            setProgress(pct);
+          }
+        };
 
-      const speedMbps = parseFloat(((SIZE * 8) / duration / 1_000_000).toFixed(2));
+        xhr.onload = () => {
+          const duration = (performance.now() - start) / 1000;
+          if (duration < 0.05) return resolve(null);
 
-      ulHistoryRef.current.push(speedMbps);
-      if (ulHistoryRef.current.length > MAX_SPEED_BARS) ulHistoryRef.current.shift();
+          const speedMbps = parseFloat(((SIZE * 8) / duration / 1_000_000).toFixed(2));
 
-      setUploadSpeed(speedMbps);
-      setUlStats({
-        peak: Math.max(...ulHistoryRef.current),
-        avg: parseFloat(avg(ulHistoryRef.current).toFixed(2)),
+          ulHistoryRef.current.push(speedMbps);
+          if (ulHistoryRef.current.length > MAX_SPEED_BARS) ulHistoryRef.current.shift();
+
+          setUploadSpeed(speedMbps);
+          setUlStats({
+            peak: Math.max(...ulHistoryRef.current),
+            avg: parseFloat(avg(ulHistoryRef.current).toFixed(2)),
+          });
+          resolve(speedMbps);
+        };
+
+        xhr.onerror = () => {
+          resolve(null);
+        };
+
+        xhr.send(blob);
       });
-      return speedMbps;
     } catch {
       return null;
     }

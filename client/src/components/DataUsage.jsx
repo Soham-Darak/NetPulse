@@ -316,12 +316,12 @@ function DataTimelineChart({ dataTimeline }) {
         backgroundColor: (ctx) => {
           if (!ctx.chart.chartArea) return 'transparent';
           const g = ctx.chart.ctx.createLinearGradient(0, ctx.chart.chartArea.top, 0, ctx.chart.chartArea.bottom);
-          g.addColorStop(0, 'rgba(56,189,248,0.3)');
+          g.addColorStop(0, 'rgba(56,189,248,0.4)');
           g.addColorStop(1, 'rgba(56,189,248,0)');
           return g;
         },
         fill: true,
-        tension: 0.4,
+        cubicInterpolationMode: 'monotone',
         pointRadius: 0,
       },
       {
@@ -331,7 +331,7 @@ function DataTimelineChart({ dataTimeline }) {
         borderWidth: 2,
         backgroundColor: 'transparent',
         fill: false,
-        tension: 0.4,
+        cubicInterpolationMode: 'monotone',
         pointRadius: 0,
         borderDash: [4, 4],
       },
@@ -514,7 +514,12 @@ export default function DataUsage({ tracker }) {
         {/* Line: Data Timeline */}
         <div className={styles.chartCard}>
            <div className={styles.chartHeader}>
-            <span className={styles.chartTitle}>Live Data Transfer Timeline</span>
+             <div>
+               <span className={styles.chartTitle}>Live Data Transfer Timeline</span>
+               <div className={styles.chartSubtitle}>
+                 <span style={{color: '#38bdf8'}}>● Solid Blue</span> tracks incoming downloads. <span style={{color: '#fbbf24', marginLeft: '6px'}}>○ Dotted Yellow</span> tracks outgoing uploads. Real-time rates.
+               </div>
+             </div>
           </div>
           <DataTimelineChart dataTimeline={dataTimeline} />
         </div>
