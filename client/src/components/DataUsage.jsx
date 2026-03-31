@@ -125,49 +125,25 @@ function CategoryChart({ byCategory }) {
     return sortedCategories.reduce((s, c) => s + byCategory[c].bytes + (byCategory[c].outgoing || 0), 0);
   }, [sortedCategories, byCategory]);
 
-  const centerTextPlugin = useMemo(() => ({
-    id: 'centerTextPlugin',
-    beforeDraw: (chart) => {
-      const { width, height, ctx } = chart;
-      ctx.restore();
-      const fontSize = (height / 120).toFixed(2);
-      ctx.font = `800 ${fontSize}em 'JetBrains Mono', monospace`;
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#f8fafc';
-      
-      const text = formatBytes(totalBytes);
-      const textX = Math.round((width - ctx.measureText(text).width) / 2);
-      const textY = height / 2.1;
-
-      ctx.fillText(text, textX, textY);
-      
-      ctx.font = `600 ${fontSize * 0.35}em Inter, sans-serif`;
-      ctx.fillStyle = '#94a3b8';
-      const subText = 'TOTAL DATA';
-      const subX = Math.round((width - ctx.measureText(subText).width) / 2);
-      const subY = height / 2.1 + (height * 0.12);
-      ctx.fillText(subText, subX, subY);
-      ctx.save();
-    }
-  }), [totalBytes]);
+  // ── Canvas custom text plugin removed in favor of responsive DOM overlay ──
 
   const data = useMemo(() => ({
     labels: sortedCategories,
     datasets: [{
       data: sortedCategories.map(c => byCategory[c].bytes + (byCategory[c].outgoing || 0)),
       backgroundColor: sortedCategories.map(c => CATEGORY_COLORS[c]?.bg || 'rgba(148,163,184,0.5)'),
-      borderColor: sortedCategories.map(c => CATEGORY_COLORS[c]?.border || '#94a3b8'),
-      borderWidth: 2,
+      borderColor: 'rgba(0,0,0,0)', // Transparent border for floating slice aesthetic
+      borderWidth: 0,
       hoverOffset: 12,
       borderRadius: 4, // smooth edges on the doughnut segments
-      spacing: 2,      // tiny gap between segments
+      spacing: 6,      // slightly larger gap between segments for clarity
     }],
   }), [sortedCategories, byCategory]);
 
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '75%',
+    cutout: '80%', // Thinner ring for a highly modern and clean look
     layout: { padding: 12 },
     animation: { animateRotate: true, animateScale: true, duration: 800, easing: 'easeOutQuart' },
     plugins: {
@@ -198,7 +174,11 @@ function CategoryChart({ byCategory }) {
   return (
     <div className={styles.doughnutContainer}>
       <div className={styles.doughnutCanvasWrap}>
-        <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
+        <Doughnut data={data} options={options} />
+        <div className={styles.doughnutCenterOverlay}>
+          <span className={styles.doughnutCenterValue}>{formatBytes(totalBytes)}</span>
+          <span className={styles.doughnutCenterLabel}>TOTAL DATA</span>
+        </div>
       </div>
       <div className={styles.doughnutLegend}>
         {sortedCategories.map(cat => {
@@ -316,12 +296,12 @@ function DataTimelineChart({ dataTimeline }) {
         backgroundColor: (ctx) => {
           if (!ctx.chart.chartArea) return 'transparent';
           const g = ctx.chart.ctx.createLinearGradient(0, ctx.chart.chartArea.top, 0, ctx.chart.chartArea.bottom);
-          g.addColorStop(0, 'rgba(56,189,248,0.3)');
+          g.addColorStop(0, 'rgba(56,189,248,0.4)');
           g.addColorStop(1, 'rgba(56,189,248,0)');
           return g;
         },
         fill: true,
-        tension: 0.4,
+        cubicInterpolationMode: 'monotone',
         pointRadius: 0,
       },
       {
@@ -331,7 +311,7 @@ function DataTimelineChart({ dataTimeline }) {
         borderWidth: 2,
         backgroundColor: 'transparent',
         fill: false,
-        tension: 0.4,
+        cubicInterpolationMode: 'monotone',
         pointRadius: 0,
         borderDash: [4, 4],
       },
@@ -510,16 +490,19 @@ export default function DataUsage({ tracker }) {
           </div>
           <CategoryChart byCategory={byCategory} />
         </div>
-
-        {/* Line: Data Timeline */}
-        <div className={styles.chartCard}>
+      </div>
+      {/* Line: Data Timeline */}
+        <div className={styles.chartCard} style={{ marginBottom: 24 }}>
            <div className={styles.chartHeader}>
-            <span className={styles.chartTitle}>Live Data Transfer Timeline</span>
+             <div>
+               <span className={styles.chartTitle}>Live Data Transfer Timeline</span>
+               <div className={styles.chartSubtitle}>
+                 <span style={{color: '#38bdf8'}}>● Solid Blue</span> tracks incoming downloads. <span style={{color: '#fbbf24', marginLeft: '6px'}}>○ Dotted Yellow</span> tracks outgoing uploads. Real-time rates.
+               </div>
+             </div>
           </div>
           <DataTimelineChart dataTimeline={dataTimeline} />
         </div>
-      </div>
-
       {/* Domain Chart */}
       <div className={styles.chartCard} style={{ marginBottom: 24 }}>
         <div className={styles.chartHeader}>

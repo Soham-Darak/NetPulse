@@ -218,6 +218,8 @@
 
 .chartWrap {
   width: 100%;
+  position: relative;
+  min-width: 0;
 }
 
 .doughnutContainer {
@@ -232,6 +234,39 @@
   height: 100%;
   position: relative;
   min-width: 0;
+}
+
+.doughnutCenterOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+  width: 70%;
+}
+
+.doughnutCenterValue {
+  font-family: var(--font-mono);
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.1;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.doughnutCenterLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(9px, 1vw, 11px);
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
 }
 
 .doughnutLegend {
@@ -326,7 +361,7 @@
 
 .chartsRow {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr;
   gap: 24px;
   margin-bottom: 24px;
 }
@@ -336,6 +371,7 @@
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   padding: 24px;
+  min-width: 0;
 }
 
 .chartHeader {
@@ -349,6 +385,14 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
+}
+
+.chartSubtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .chartBadge {

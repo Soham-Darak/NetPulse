@@ -31,10 +31,13 @@ export default function App() {
     togglePause, clearHistory,
   } = useNetworkMonitor();
 
-  const tracker = useDataTracker();
+  const tracker = useDataTracker(isPaused);
 
   const handleClear = () => {
-    if (window.confirm('Clear all test history?')) clearHistory();
+    if (window.confirm('Clear all test history?')) {
+      clearHistory();
+      tracker.clearTracker();
+    }
   };
 
   return (

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // Generate a unique tab ID so we can distinguish data from different tabs
 const TAB_ID = `tab-${Math.random().toString(36).slice(2, 8)}`;
 const WS_URL = `ws://${window.location.host}/ws`;
-const MAX_REQUESTS = 300;
+const MAX_REQUESTS = 1000;
 const UPDATE_INTERVAL = 10_000; // ms (10s)
 const MAX_DATA_WINDOW = 10 * 60 * 1000; // 10 minutes
 
@@ -56,47 +56,127 @@ export const CATEGORY_COLORS = {
   'Other':               { bg: 'rgba(148, 163, 184, 0.5)',    border: '#94a3b8' },
 };
 
-export function useDataTracker() {
-  // ── Request log ────────────────────────────────────────────────────────────
+export function useDataTracker(isPaused = false) {
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
+
+  // ── Request log & UI timeline state ────────────────────────────────────────
   const [requests, setRequests] = useState([]);
+  const [byTab, setByTab] = useState({});
+  const [dataTimeline, setDataTimeline] = useState({ labels: [], incoming: [], outgoing: [] });
+  const [dataRate, setDataRate] = useState({ inRate: 0, outRate: 0 });
+
+  // ── Permanent Accumulator State ────────────────────────────────────────────
   const [totalIncoming, setTotalIncoming] = useState(0);
   const [totalOutgoing, setTotalOutgoing] = useState(0);
-
-  // ── Speed test data ────────────────────────────────────────────────────────
   const [speedTestData, setSpeedTestData] = useState({ download: 0, upload: 0, ping: 0, total: 0 });
-
-  // ── Breakdowns ─────────────────────────────────────────────────────────────
   const [byCategory, setByCategory] = useState({});
   const [byDomain, setByDomain] = useState({});
-  const [byTab, setByTab] = useState({});
-
-  // ── Timeline ───────────────────────────────────────────────────────────────
-  const [dataTimeline, setDataTimeline] = useState({ labels: [], incoming: [], outgoing: [] });
-
-  // ── Data rate ──────────────────────────────────────────────────────────────
-  const [dataRate, setDataRate] = useState({ inRate: 0, outRate: 0 });
 
   const requestsRef = useRef([]);
   const outgoingRef = useRef(0);
   const wsRef = useRef(null);
+  const chunkAccumulatorRef = useRef({ incoming: 0, outgoing: 0 });
+
+  // Permanent Refs
+  const permTotals = useRef({ incoming: 0, outgoing: 0 });
+  const permSpeedTest = useRef({ download: 0, upload: 0, ping: 0, total: 0 });
+  const permCategory = useRef({});
+  const permDomain = useRef({});
+
+  // ── Apply metrics permanently ────────────────────────────────────────
+  const applyMetrics = useCallback((newReqs) => {
+    let dIn = 0, dOut = 0;
+    const catMap = permCategory.current;
+    const domMap = permDomain.current;
+    const st = permSpeedTest.current;
+
+    newReqs.forEach(r => {
+      dIn += r.incoming;
+      dOut += r.outgoing;
+
+      if (!catMap[r.category]) catMap[r.category] = { bytes: 0, count: 0, outgoing: 0 };
+      catMap[r.category].bytes += r.incoming;
+      catMap[r.category].outgoing += r.outgoing;
+      catMap[r.category].count++;
+
+      if (!domMap[r.domain]) domMap[r.domain] = { incoming: 0, outgoing: 0, count: 0 };
+      domMap[r.domain].incoming += r.incoming;
+      domMap[r.domain].outgoing += r.outgoing;
+      domMap[r.domain].count++;
+
+      if (r.category === 'Download Tests') st.download += r.incoming;
+      if (r.category === 'Upload Tests') st.upload += r.outgoing;
+      if (r.category === 'Response Time Tests') st.ping += (r.incoming + r.outgoing);
+    });
+
+    permTotals.current.incoming += dIn;
+    permTotals.current.outgoing += dOut;
+    st.total = st.download + st.upload + st.ping;
+
+    setTotalIncoming(permTotals.current.incoming);
+    setTotalOutgoing(permTotals.current.outgoing);
+    setByCategory({ ...catMap });
+    setByDomain({ ...domMap });
+    setSpeedTestData({ ...st });
+  }, []);
+
+  // ── Rebuild windowing state from timeline history ─────────────────────────────
+  const rebuildState = useCallback(() => {
+    const cutoff = Date.now() - MAX_DATA_WINDOW;
+    const all = requestsRef.current.filter(r => r.time >= cutoff);
+
+    setRequests([...all]);
+
+    const tabMap = {};
+    all.forEach(r => {
+      if (!tabMap[r.tabId]) tabMap[r.tabId] = { incoming: 0, outgoing: 0, count: 0 };
+      tabMap[r.tabId].incoming += r.incoming;
+      tabMap[r.tabId].outgoing += r.outgoing;
+      tabMap[r.tabId].count++;
+    });
+    setByTab(tabMap);
+  }, []);
+
+  // ── Clear metrics fully ────────────────────────────────────────
+  const clearTracker = useCallback(() => {
+    requestsRef.current = [];
+    outgoingRef.current = 0;
+    chunkAccumulatorRef.current = { incoming: 0, outgoing: 0 };
+
+    permTotals.current = { incoming: 0, outgoing: 0 };
+    permSpeedTest.current = { download: 0, upload: 0, ping: 0, total: 0 };
+    permCategory.current = {};
+    permDomain.current = {};
+
+    setTotalIncoming(0);
+    setTotalOutgoing(0);
+    setSpeedTestData({ download: 0, upload: 0, ping: 0, total: 0 });
+    setByCategory({});
+    setByDomain({});
+
+    setDataTimeline({ labels: [], incoming: [], outgoing: [] });
+    setDataRate({ inRate: 0, outRate: 0 });
+
+    rebuildState();
+  }, [rebuildState]);
 
   // ── Process a batch of performance entries ─────────────────────────────────
   const processEntries = useCallback((entries) => {
+    if (isPausedRef.current) return;
+
     const now = Date.now();
     const cutoff = now - MAX_DATA_WINDOW;
 
     const newRequests = entries.map(entry => {
+      const url = entry.name.toLowerCase();
+      if (/\/upload-test/.test(url) || /\/test-file/.test(url)) return null;
+
       const incoming = entry.transferSize || entry.encodedBodySize || 0;
 
       // Better outgoing estimation based on request type
       let outgoing = 200; // base headers estimate
-      const url = entry.name.toLowerCase();
-      if (/\/upload-test/.test(url)) {
-        // Upload test: actual uploaded payload
-        outgoing = entry.encodedBodySize || 2 * 1024 * 1024; // fallback: 2MB
-      } else if (/\/test-file/.test(url)) {
-        outgoing = 300; // just headers for download test
-      } else if (entry.initiatorType === 'fetch' || entry.initiatorType === 'xmlhttprequest') {
+      if (entry.initiatorType === 'fetch' || entry.initiatorType === 'xmlhttprequest') {
         outgoing = Math.max(entry.encodedBodySize * 0.1, 300);
       }
 
@@ -112,9 +192,11 @@ export function useDataTracker() {
         time: now,
         type: entry.initiatorType || 'other',
       };
-    }).filter(r => r.incoming > 0 || r.category === 'API/Fetch' || r.category === 'Ping' || r.category.startsWith('Speed Test'));
+    }).filter(r => r && (r.incoming > 0 || r.category === 'API/Fetch' || r.category === 'Ping' || r.category.startsWith('Speed Test')));
 
     if (newRequests.length === 0) return;
+
+    applyMetrics(newRequests);
 
     // Add new requests and trim to 10-minute window
     requestsRef.current = [...requestsRef.current, ...newRequests]
@@ -132,61 +214,7 @@ export function useDataTracker() {
         requests: newRequests,
       }));
     }
-  }, []);
-
-  // ── Rebuild all derived state from requestsRef ─────────────────────────────
-  const rebuildState = useCallback(() => {
-    const cutoff = Date.now() - MAX_DATA_WINDOW;
-    const all = requestsRef.current.filter(r => r.time >= cutoff);
-
-    setRequests([...all]);
-    setTotalIncoming(all.reduce((s, r) => s + r.incoming, 0));
-
-    // Recalculate total outgoing from current window
-    const totalOut = all.reduce((s, r) => s + r.outgoing, 0);
-    setTotalOutgoing(totalOut);
-
-    // Speed test data breakdown
-    const dlBytes = all.filter(r => r.category === 'Download Tests').reduce((s, r) => s + r.incoming, 0);
-    const ulBytes = all.filter(r => r.category === 'Upload Tests').reduce((s, r) => s + r.outgoing, 0);
-    const pingBytes = all.filter(r => r.category === 'Response Time Tests').reduce((s, r) => s + r.incoming + r.outgoing, 0);
-    setSpeedTestData({
-      download: dlBytes,
-      upload: ulBytes,
-      ping: pingBytes,
-      total: dlBytes + ulBytes + pingBytes,
-    });
-
-    // By category
-    const catMap = {};
-    all.forEach(r => {
-      if (!catMap[r.category]) catMap[r.category] = { bytes: 0, count: 0, outgoing: 0 };
-      catMap[r.category].bytes += r.incoming;
-      catMap[r.category].outgoing += r.outgoing;
-      catMap[r.category].count++;
-    });
-    setByCategory(catMap);
-
-    // By domain
-    const domMap = {};
-    all.forEach(r => {
-      if (!domMap[r.domain]) domMap[r.domain] = { incoming: 0, outgoing: 0, count: 0 };
-      domMap[r.domain].incoming += r.incoming;
-      domMap[r.domain].outgoing += r.outgoing;
-      domMap[r.domain].count++;
-    });
-    setByDomain(domMap);
-
-    // By tab
-    const tabMap = {};
-    all.forEach(r => {
-      if (!tabMap[r.tabId]) tabMap[r.tabId] = { incoming: 0, outgoing: 0, count: 0 };
-      tabMap[r.tabId].incoming += r.incoming;
-      tabMap[r.tabId].outgoing += r.outgoing;
-      tabMap[r.tabId].count++;
-    });
-    setByTab(tabMap);
-  }, []);
+  }, [applyMetrics, rebuildState]);
 
   // ── Timeline updater ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -214,6 +242,57 @@ export function useDataTracker() {
     return () => clearInterval(iv);
   }, []);
 
+  // ── Intercept custom real-time chunks ──────────────────────────────────────
+  useEffect(() => {
+    const handleChunk = (e) => {
+      // Buffer the chunks regardless, but we discard them if paused down below during processing interval
+      if (e.detail.type === 'download') chunkAccumulatorRef.current.incoming += e.detail.bytes;
+      if (e.detail.type === 'upload') chunkAccumulatorRef.current.outgoing += e.detail.bytes;
+    };
+    window.addEventListener('netpulse_live_chunk', handleChunk);
+    return () => window.removeEventListener('netpulse_live_chunk', handleChunk);
+  }, []);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (isPausedRef.current) {
+        chunkAccumulatorRef.current = { incoming: 0, outgoing: 0 };
+        return;
+      }
+
+      const { incoming, outgoing } = chunkAccumulatorRef.current;
+      if (incoming > 0 || outgoing > 0) {
+        chunkAccumulatorRef.current = { incoming: 0, outgoing: 0 };
+        const now = Date.now();
+        const cutoff = now - MAX_DATA_WINDOW;
+        
+        const newReqs = [];
+        if (incoming > 0) {
+          newReqs.push({
+            id: `dl-chunk-${now}-${Math.random().toString(36).slice(2,6)}`, tabId: TAB_ID, url: '/test-file (Stream)', domain: window.location.hostname,
+            category: 'Download Tests', incoming, outgoing: 0, duration: 1000, time: now, type: 'fetch'
+          });
+        }
+        if (outgoing > 0) {
+          newReqs.push({
+            id: `ul-chunk-${now}-${Math.random().toString(36).slice(2,6)}`, tabId: TAB_ID, url: '/upload-test (Stream)', domain: window.location.hostname,
+            category: 'Upload Tests', incoming: 0, outgoing, duration: 1000, time: now, type: 'fetch'
+          });
+        }
+        
+        applyMetrics(newReqs);
+
+        requestsRef.current = [...requestsRef.current, ...newReqs]
+          .filter(r => r.time >= cutoff)
+          .slice(-MAX_REQUESTS);
+          
+        outgoingRef.current += outgoing;
+        rebuildState();
+      }
+    }, 1000); // Process accumulator buffer once every second
+    return () => clearInterval(iv);
+  }, [applyMetrics, rebuildState]);
+
   // ── Set up PerformanceObserver + WebSocket ─────────────────────────────────
   useEffect(() => {
     // Process existing entries
@@ -237,16 +316,20 @@ export function useDataTracker() {
       wsRef.current = ws;
 
       ws.onmessage = (evt) => {
+        if (isPausedRef.current) return;
         try {
           const msg = JSON.parse(evt.data);
           if (msg.type === 'data_usage' && msg.tabId !== TAB_ID) {
             const otherRequests = msg.requests || [];
-            const cutoff = Date.now() - MAX_DATA_WINDOW;
-            requestsRef.current = [...requestsRef.current, ...otherRequests]
-              .filter(r => r.time >= cutoff)
-              .slice(-MAX_REQUESTS);
-            outgoingRef.current += otherRequests.reduce((s, r) => s + r.outgoing, 0);
-            rebuildState();
+            if (otherRequests.length > 0) {
+              applyMetrics(otherRequests);
+              const cutoff = Date.now() - MAX_DATA_WINDOW;
+              requestsRef.current = [...requestsRef.current, ...otherRequests]
+                .filter(r => r.time >= cutoff)
+                .slice(-MAX_REQUESTS);
+              outgoingRef.current += otherRequests.reduce((s, r) => s + r.outgoing, 0);
+              rebuildState();
+            }
           }
         } catch {}
       };
@@ -258,7 +341,7 @@ export function useDataTracker() {
       if (observer) observer.disconnect();
       if (wsRef.current) try { wsRef.current.close(); } catch {}
     };
-  }, []);
+  }, [processEntries, applyMetrics, rebuildState]);
 
   return {
     tabId: TAB_ID,
@@ -271,5 +354,6 @@ export function useDataTracker() {
     byTab,
     dataTimeline,
     dataRate,
+    clearTracker,
   };
 }
