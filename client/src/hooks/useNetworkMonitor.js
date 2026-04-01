@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { initCrossTabComms, broadcastMetrics, closeCrossTabComms } from '../utils/crossTabComms';
 
 const HISTORY_KEY = 'netpulse_history';
+const TAB_ID = `tab-${Math.random().toString(36).slice(2, 8)}`;
 const MAX_PING_SAMPLES = 60;
 const MAX_CHART_POINTS = 60;
 const MAX_SPEED_BARS = 60;
@@ -450,6 +452,9 @@ export function useNetworkMonitor() {
 
   // ── On mount ────────────────────────────────────────────────────────────
   useEffect(() => {
+    // Initialize cross-tab communication
+    initCrossTabComms();
+
     // Connection info
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (conn) {
@@ -503,13 +508,33 @@ export function useNetworkMonitor() {
       if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
       pauseTimer();
       if (wsRef.current) { try { wsRef.current.close(); } catch {} }
+      closeCrossTabComms();
     };
   }, []); // run once
 
   const quality = getQuality(ping, downloadSpeed, uploadSpeed);
   const elapsedFormatted = formatElapsed(elapsedSeconds);
 
+  // ── Broadcast metrics to other tabs ─────────────────────────────────────
+  useEffect(() => {
+    const tabQuality = getQuality(ping, downloadSpeed, uploadSpeed);
+    const broadcastTimer = setInterval(() => {
+      broadcastMetrics(TAB_ID, {
+        downloadSpeed,
+        uploadSpeed,
+        ping,
+        quality: tabQuality,
+        connectionInfo,
+        isTesting,
+        currentPhase,
+      });
+    }, 1000); // Broadcast every second
+
+    return () => clearInterval(broadcastTimer);
+  }, [downloadSpeed, uploadSpeed, ping, connectionInfo, isTesting, currentPhase]);
+
   return {
+    tabId: TAB_ID,
     ping, pingStats, jitter, packetLoss,
     downloadSpeed, dlStats,
     uploadSpeed, ulStats,

@@ -96,7 +96,136 @@ Below documents the microscopic role of every line of code inside the infrastruc
 
 ---
 
-## 🚀 Quick-Boot Execution Instructions
+## � Understanding Data Usage Categories
+
+NetPulse breaks down all network traffic into intelligent categories so you can see exactly where your bandwidth is going. Here's what each category means:
+
+### Data Breakdown Categories
+
+| Category | What It Tracks | Typical Uses | Example |
+|----------|----------------|--------------|---------|
+| **Scripts** | JavaScript files (.js, .jsx, .mjs, .ts, .tsx) | React code, libraries, app logic | Your app's React components, Vue.js code |
+| **Download Tests** | Speed test files being downloaded | Measuring download bandwidth | 25MB test file from Cloudflare |
+| **Upload Tests** | Speed test files being uploaded | Measuring upload bandwidth | 5MB test payload sent to Cloudflare |
+| **Styles** | CSS stylesheets (.css files) | Visual styling, design files | Tailwind CSS, custom stylesheets |
+| **Fonts** | Font files (.woff2, .ttf, .otf, .eot) | Typography, text rendering | Google Fonts, custom web fonts |
+| **Images** | Image files (.png, .jpg, .gif, .svg, .webp) | Visual assets, icons, pictures | App logos, user avatars, thumbnails |
+| **API/Fetch** | API calls and data requests | Server communication, data fetching | REST API calls, WebSocket messages |
+| **Media** | Video and audio files (.mp4, .webm, .mp3) | Streaming content, playback | Videos, podcasts, audio clips |
+| **Response Time Tests** | Ping/latency measurement requests | Testing network latency | `/ping` endpoint calls |
+| **Other** | Miscellaneous requests | Unclassified traffic | Tracking pixels, analytics |
+
+### Your Current Data Usage (Example from Screenshot)
+
+```
+Scripts                 86 requests  │  5.03 MB   │ 41.3%  ← Your React app code
+                                     │            │
+Download Tests          1 request    │  5 MB      │ 41.1%  ← Speed test file
+                                     │            │
+Upload Tests            1 request    │  2 MB      │ 16.4%  ← Speed test upload
+                                     │            │
+Styles                  4 requests   │  147.29 KB │ 1.2%   ← CSS stylesheets
+                                     │            │
+Fonts                   2 requests   │  1.94 KB   │ 0.0%   ← Font files
+                                     │            │
+API/Fetch               2 requests   │  [small]   │ [small]← API calls
+```
+
+### 💡 Key Insights from Your Data
+
+1. **Scripts (41.3%)** - The largest category because React, chart libraries, and UI code are substantial
+2. **Download Tests (41.1%)** - Speed testing consumes almost as much as your app code (intentional!)
+3. **Upload Tests (16.4%)** - Tests how fast you can send data
+4. **Styles & Fonts (1.2%)** - Minimal impact on overall bandwidth
+5. **API/Fetch** - Very small because most data is served locally
+
+### 📈 Why These Proportions?
+
+- **High Test Usage (57.5%)** = App is actively measuring your internet speed (working as designed!)
+- **Scripts (41.3%)** = Necessary app overhead for React, charts, and UI components
+- **Other (1.2%)** = CSS, fonts, and other assets are already cached/minimal
+
+### 🔄 What Happens With Multiple Tabs?
+
+When you open NetPulse in multiple tabs, each tab:
+- Runs its own speed tests independently
+- Broadcasts its data usage to all other tabs
+- Shows up in the **"Data Usage by Tab"** section
+- Combined usage = Sum of all tabs' activity
+
+### 🎯 Optimization Tips
+
+To reduce data usage:
+- Close extra tabs when not needed (each tab runs tests)
+- Pause testing when not actively monitoring
+- Monitor stays within 10MB/hour if paused
+- Speed tests are the primary data consumer
+
+---
+## 🌐 Multi-Tab Network Monitoring (NEW!)
+
+### What It Does
+
+**See speed and data from ALL tabs at once!** When you open NetPulse in multiple browser tabs, they automatically share information with each other in real-time. You can see:
+
+1. **Each tab's download speed** - How fast each tab is downloading
+2. **Each tab's upload speed** - How fast each tab is uploading  
+3. **Each tab's ping** - Response time from each tab
+4. **Data usage per tab** - See which tab is using the most data
+
+### How It Works (In Simple Terms)
+
+- **Communication:** Each tab sends its speed measurements to all other tabs every second using the "BroadcastChannel" API (a hidden phone line between browser tabs)
+- **Fallback:** If your browser is old, it uses `localStorage` instead (like leaving notes in a shared folder)
+- **Auto-Cleanup:** Tabs that go idle automatically disappear after 15 seconds (no ghost data)
+- **No Server Needed:** All tab communication happens locally (nothing goes to the internet)
+
+### Where To Find It
+
+#### 1. **Active Connections** (In Recent Test History section)
+Shows all connected tabs with:
+- Tab ID (unique name like `tab-a1b2c3`)
+- Current download speed
+- Current upload speed
+- Current ping
+- What the tab is doing (idle, testing, etc.)
+- Connection quality badge
+
+#### 2. **Data Usage by Tab** (In Data Consumption Monitor section)
+Shows a card for each tab with:
+- Total data used by that tab
+- Top 5 data categories for that tab
+- Percentage breakdown (which takes up most space)
+
+### Example: Opening 2 Tabs
+
+**Tab 1** shows: Download 85 Mbps | Upload 42 Mbps | Ping 12ms  
+**Tab 2** shows: Download 52 Mbps | Upload 28 Mbps | Ping 15ms  
+
+**Average speeds:** 68.5 Mbps download | 35 Mbps upload  
+**Max speeds:** 85 Mbps download | 42 Mbps upload
+
+### Key Features
+
+✅ **Real-time updates** - Speeds update every second  
+✅ **Independent tests** - Each tab runs tests separately  
+✅ **Automatic detection** - New tabs found instantly  
+✅ **Data breakdown** - See what type of data each tab uses  
+✅ **Works offline** - Communication happens locally, no internet needed  
+✅ **Responsive** - Works on desktop, tablet, and mobile
+
+### Browser Support
+
+| Browser | Support |
+|---------|---------|
+| Chrome 54+ | ✅ Full Support |
+| Firefox 38+ | ✅ Full Support |
+| Safari 15.1+ | ✅ Full Support |
+| Edge 79+ | ✅ Full Support |
+| Older browsers | ✅ Uses fallback method |
+
+---
+## �🚀 Quick-Boot Execution Instructions
 
 ### Deployment Requirements
 Ensure you are running **Node 18.x** or greater inside your preferred console. 

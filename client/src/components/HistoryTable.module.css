@@ -153,6 +153,155 @@
 .good { background: rgba(74, 222, 128, 0.1); color: var(--green); border: 1px solid rgba(74, 222, 128, 0.3); }
 .moderate { background: rgba(251, 191, 36, 0.1); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.3); }
 .poor { background: rgba(248, 113, 113, 0.1); color: var(--red); border: 1px solid rgba(248, 113, 113, 0.3); }
+.idle { background: rgba(148, 163, 184, 0.05); color: #94a3b8; }
+
+/* ── All Tabs Section ── */
+.allTabsSection {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border2);
+}
+
+.subHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.subTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subTitleIcon {
+  color: var(--cyan);
+}
+
+.subTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.noConnections {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.noConnections .emptyIcon {
+  margin: 0;
+  display: inline;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 20px 0 24px 0;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.statValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f8fafc;
+  font-family: var(--font-mono);
+}
+
+.statValue svg {
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.tabRow {
+  transition: background 0.2s ease;
+}
+
+.tabRow:hover td {
+  background: rgba(56, 189, 248, 0.05) !important;
+}
+
+.tabIdVal {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.statusWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.phaseBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.phaseBadge.idle {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+.phaseBadge.ping {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
+
+.phaseBadge.download {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.phaseBadge.upload {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+.phaseBadge.done {
+  background: rgba(134, 239, 172, 0.1);
+  color: #86efac;
+}
 
 @media (max-width: 600px) {
   .header { flex-direction: column; align-items: flex-start; gap: 12px; }

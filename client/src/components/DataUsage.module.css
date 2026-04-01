@@ -513,15 +513,146 @@
 .outgoing { color: var(--amber); font-family: var(--font-mono); }
 .empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 13px; }
 
+/* ── Per-Tab Data Section ── */
+.perTabSection {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border2);
+}
+
+.sectionSubHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sectionSubHeader svg {
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.subTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.tabBadge {
+  margin-left: auto;
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.perTabGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.perTabCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.perTabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.perTabId {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.perTabTotal {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.perTabCategories {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perTabCategoryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.perTabCategoryDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.perTabCategoryName {
+  flex: 1;
+  color: var(--text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perTabCategorySize {
+  font-family: var(--font-mono);
+  color: #cbd5e1;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+.perTabCategoryPct {
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  font-weight: 700;
+  min-width: 35px;
+  text-align: right;
+}
+
 @media (max-width: 1000px) {
   .chartsRow, .tablesRow { grid-template-columns: 1fr; }
   .summaryGrid { grid-template-columns: repeat(2, 1fr); }
   .breakdownRow { flex-wrap: wrap; }
   .breakdownLabel { width: auto; flex: 1; }
   .breakdownBarWrap { flex-basis: 100%; order: 3; margin-top: 8px; }
+  .perTabGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
   .summaryGrid { grid-template-columns: 1fr; }
   .sectionHeader { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .perTabGrid { grid-template-columns: 1fr; }
 }

@@ -8,9 +8,10 @@ import {
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import AnimatedNumber from './AnimatedNumber';
 import { formatBytes, CATEGORY_COLORS } from '../hooks/useDataTracker';
+import { useAllTabsDataUsage } from '../hooks/useAllTabsDataUsage';
 import styles from './DataUsage.module.css';
 
-import { ArrowDownCircle, ArrowUpCircle, Package, FlaskConical, Download, Upload, Activity } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Package, FlaskConical, Download, Upload, Activity, Network } from 'lucide-react';
 
 ChartJS.register(
   ArcElement, CategoryScale, LinearScale,
@@ -451,6 +452,7 @@ export default function DataUsage({ tracker }) {
   } = tracker;
 
   const tabCount = Object.keys(byTab).length;
+  const allTabsDataUsage = useAllTabsDataUsage();
 
   return (
     <section className={styles.section}>
@@ -529,6 +531,56 @@ export default function DataUsage({ tracker }) {
           <RequestLog requests={requests} />
         </div>
       </div>
+
+      {/* Per-Tab Data Breakdown */}
+      {Object.keys(allTabsDataUsage).length > 0 && (
+        <div className={styles.perTabSection}>
+          <div className={styles.sectionSubHeader}>
+            <Network size={20} />
+            <h3 className={styles.subTitle}>Data Usage by Tab</h3>
+            <span className={styles.tabBadge}>{Object.keys(allTabsDataUsage).length} tabs</span>
+          </div>
+          <div className={styles.perTabGrid}>
+            {Object.entries(allTabsDataUsage).map(([tabId, dataUsage]) => {
+              if (!dataUsage || !dataUsage.byCategory) return null;
+              
+              const totalData = Object.values(dataUsage.byCategory || {})
+                .reduce((sum, cat) => sum + (cat.bytes || 0), 0);
+              
+              return (
+                <div key={tabId} className={styles.perTabCard}>
+                  <div className={styles.perTabHeader}>
+                    <span className={styles.perTabId}>{tabId}</span>
+                    <span className={styles.perTabTotal}>{formatBytes(totalData)}</span>
+                  </div>
+                  <div className={styles.perTabCategories}>
+                    {Object.entries(dataUsage.byCategory || {})
+                      .sort((a, b) => (b[1].bytes || 0) - (a[1].bytes || 0))
+                      .slice(0, 5)
+                      .map(([category, catData]) => {
+                        const bytes = catData.bytes || 0;
+                        const pct = totalData > 0 ? ((bytes / totalData) * 100).toFixed(0) : 0;
+                        const color = CATEGORY_COLORS[category]?.border || '#94a3b8';
+                        
+                        return (
+                          <div key={category} className={styles.perTabCategoryRow}>
+                            <span 
+                              className={styles.perTabCategoryDot}
+                              style={{ background: color }}
+                            />
+                            <span className={styles.perTabCategoryName}>{category}</span>
+                            <span className={styles.perTabCategorySize}>{formatBytes(bytes)}</span>
+                            <span className={styles.perTabCategoryPct}>{pct}%</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Background from './components/Background';
 import Header from './components/Header';
 import MetricCard from './components/MetricCard';
@@ -12,11 +12,13 @@ import { useNetworkMonitor } from './hooks/useNetworkMonitor';
 import { useDataTracker } from './hooks/useDataTracker';
 import { fmt } from './utils/format';
 import styles from './App.module.css';
+import { broadcastMetrics } from './utils/crossTabComms';
 
 import { Activity, DownloadCloud, UploadCloud } from 'lucide-react';
 
 export default function App() {
   const {
+    tabId,
     ping, pingStats, jitter, packetLoss,
     downloadSpeed, dlStats,
     uploadSpeed, ulStats,
@@ -39,6 +41,31 @@ export default function App() {
       tracker.clearTracker();
     }
   };
+
+  // ── Broadcast tracker data usage to other tabs ──
+  useEffect(() => {
+    const broadcastTimer = setInterval(() => {
+      if (tracker?.byCategory && tabId) {
+        broadcastMetrics(tabId, {
+          downloadSpeed,
+          uploadSpeed,
+          ping,
+          quality,
+          connectionInfo,
+          isTesting,
+          currentPhase,
+          dataUsage: {
+            totalIncoming: tracker.totalIncoming || 0,
+            totalOutgoing: tracker.totalOutgoing || 0,
+            byCategory: tracker.byCategory || {},
+            dataRate: tracker.dataRate || { inRate: 0, outRate: 0 },
+          },
+        });
+      }
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(broadcastTimer);
+  }, [tabId, downloadSpeed, uploadSpeed, ping, quality, connectionInfo, isTesting, currentPhase, tracker]);
 
   return (
     <>

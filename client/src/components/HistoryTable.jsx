@@ -1,7 +1,8 @@
 import React from 'react';
-import { Download, History, Activity } from 'lucide-react';
+import { Download, History, Activity, Network, Zap } from 'lucide-react';
 import { fmt, qualityLabel } from '../utils/format';
 import { getQuality as gq } from '../hooks/useNetworkMonitor';
+import { useAllTabsMetrics } from '../hooks/useAllTabsMetrics';
 import styles from './HistoryTable.module.css';
 
 function exportCSV(history) {
@@ -21,8 +22,20 @@ function exportCSV(history) {
   URL.revokeObjectURL(url);
 }
 
+function formatSpeed(speed) {
+  if (speed === null || speed === undefined) return '—';
+  if (speed < 1) return speed.toFixed(2) + ' Mbps';
+  return speed.toFixed(1) + ' Mbps';
+}
+
 export default function HistoryTable({ history }) {
+  const { allTabs, aggregateMetrics } = useAllTabsMetrics();
   const reversed = [...history].reverse();
+  
+  const tabList = Object.entries(allTabs).map(([tabId, data]) => ({
+    tabId,
+    ...data,
+  }));
 
   return (
     <section className={styles.section}>
@@ -84,6 +97,98 @@ export default function HistoryTable({ history }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Active Connections from All Tabs ── */}
+      <div className={styles.allTabsSection}>
+        <div className={styles.subHeader}>
+          <div className={styles.subTitleWrap}>
+            <Network className={styles.subTitleIcon} size={20} />
+            <h3 className={styles.subTitle}>Active Connections ({aggregateMetrics.tabCount})</h3>
+          </div>
+        </div>
+        <div className={styles.description}>
+          Real-time speeds from all open tabs on your device.
+        </div>
+
+        {aggregateMetrics.tabCount === 0 ? (
+          <div className={styles.noConnections}>
+            <Zap size={20} className={styles.emptyIcon} />
+            <span>No other connections detected</span>
+          </div>
+        ) : (
+          <>
+            {/* Summary Stats */}
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>AVG DOWNLOAD</span>
+                <span className={styles.statValue}>
+                  <Download size={14} />
+                  {formatSpeed(aggregateMetrics.avgDownload)}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>AVG UPLOAD</span>
+                <span className={styles.statValue}>
+                  <Activity size={14} />
+                  {formatSpeed(aggregateMetrics.avgUpload)}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>MAX DOWNLOAD</span>
+                <span className={styles.statValue}>
+                  <Zap size={14} />
+                  {formatSpeed(aggregateMetrics.maxDownload)}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>MAX UPLOAD</span>
+                <span className={styles.statValue}>
+                  <Zap size={14} />
+                  {formatSpeed(aggregateMetrics.maxUpload)}
+                </span>
+              </div>
+            </div>
+
+            {/* Tabs Table */}
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>TAB ID</th>
+                    <th>DOWNLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
+                    <th>UPLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
+                    <th>PING <span className={styles.unit}>(ms)</span></th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tabList.map((tab) => {
+                    const quality = gq(tab.ping, tab.downloadSpeed, tab.uploadSpeed);
+                    return (
+                      <tr key={tab.tabId} className={styles.tabRow}>
+                        <td className={styles.tabIdVal}>{tab.tabId}</td>
+                        <td className={styles.val}>{formatSpeed(tab.downloadSpeed)}</td>
+                        <td className={styles.val}>{formatSpeed(tab.uploadSpeed)}</td>
+                        <td className={styles.val}>{tab.ping !== null ? tab.ping + ' ms' : '—'}</td>
+                        <td>
+                          <div className={styles.statusWrap}>
+                            <span className={`${styles.phaseBadge} ${styles[tab.currentPhase]}`}>
+                              {tab.currentPhase || 'idle'}
+                            </span>
+                            <span className={`${styles.pill} ${styles[quality]}`}>
+                              {qualityLabel(quality)}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
