@@ -7,7 +7,9 @@ const MAX_SPEED_BARS = 60;
 const TEST_INTERVAL = 10_000;
 const MAX_DURATION_MS = 10 * 60 * 1000;
 
-const WS_URL = `ws://${window.location.host}/ws`;
+// Get API URL from environment, default to current host for local development
+const API_URL = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.host}`;
+const WS_URL = API_URL.replace(/^http/, 'ws') + '/ws';
 
 function loadStoredHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
@@ -147,7 +149,7 @@ export function useNetworkMonitor() {
   const singlePing = useCallback(async () => {
     try {
       const start = performance.now();
-      await fetch('/ping?t=' + Date.now(), { cache: 'no-store' });
+      await fetch(`${API_URL}/ping?t=` + Date.now(), { cache: 'no-store' });
       return Math.round(performance.now() - start);
     } catch {
       return null;
@@ -193,7 +195,7 @@ export function useNetworkMonitor() {
       const DL_SIZE = 5 * 1024 * 1024;
       const MAX_DUR = 8;
 
-      const res = await fetch('/test-file?size=' + DL_SIZE + '&t=' + Date.now(), {
+      const res = await fetch(`${API_URL}/test-file?size=` + DL_SIZE + '&t=' + Date.now(), {
         cache: 'no-store',
       });
 
@@ -261,7 +263,7 @@ export function useNetworkMonitor() {
       
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/upload-test', true);
+        xhr.open('POST', `${API_URL}/upload-test`, true);
         
         let lastLoaded = 0;
         xhr.upload.onprogress = (event) => {
