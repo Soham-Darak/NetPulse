@@ -84,6 +84,20 @@ export function useDataTracker(isPaused = false) {
   const permCategory = useRef({});
   const permDomain = useRef({});
 
+  // ── Initialize on mount (reset counters) ────────────────────────────────────
+  useEffect(() => {
+    permTotals.current = { incoming: 0, outgoing: 0 };
+    permSpeedTest.current = { download: 0, upload: 0, ping: 0, total: 0 };
+    permCategory.current = {};
+    permDomain.current = {};
+    
+    setTotalIncoming(0);
+    setTotalOutgoing(0);
+    setSpeedTestData({ download: 0, upload: 0, ping: 0, total: 0 });
+    setByCategory({});
+    setByDomain({});
+  }, []);
+
   // ── Apply metrics permanently ────────────────────────────────────────
   const applyMetrics = useCallback((newReqs) => {
     let dIn = 0, dOut = 0;

@@ -6,11 +6,11 @@ import { useAllTabsMetrics } from '../hooks/useAllTabsMetrics';
 import styles from './HistoryTable.module.css';
 
 function exportCSV(history) {
-  const header = 'Timestamp,Response Time (ms),Download Speed (Mbps),Upload Speed (Mbps),Quality\n';
+  const header = 'Timestamp,Download Speed (Mbps),Upload Speed (Mbps),Quality\n';
   const rows = history.map(r => {
     const time = new Date(r.ts).toLocaleString();
-    const q = gq(r.ping, r.dl, r.ul);
-    return `"${time}",${r.ping ?? ''},${r.dl ?? ''},${r.ul ?? ''},${q}`;
+    const q = gq(r.dl, r.ul);
+    return `"${time}",${r.dl ?? ''},${r.ul ?? ''},${q}`;
   }).join('\n');
 
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
@@ -63,7 +63,6 @@ export default function HistoryTable({ history }) {
           <thead>
             <tr>
               <th>TIME</th>
-              <th>RESPONSE TIME <span className={styles.unit}>(ms)</span></th>
               <th>DOWNLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
               <th>UPLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
               <th>CONNECTION QUALITY</th>
@@ -79,11 +78,10 @@ export default function HistoryTable({ history }) {
               </tr>
             ) : (
               reversed.map((r, i) => {
-                const q = gq(r.ping, r.dl, r.ul);
+                const q = gq(r.dl, r.ul);
                 return (
                   <tr key={r.ts ?? i}>
                     <td className={styles.timeVal}>{new Date(r.ts).toLocaleTimeString()}</td>
-                    <td className={styles.val}>{fmt(r.ping, 0)}</td>
                     <td className={styles.val}>{fmt(r.dl)}</td>
                     <td className={styles.val}>{fmt(r.ul)}</td>
                     <td>
@@ -158,19 +156,17 @@ export default function HistoryTable({ history }) {
                     <th>TAB ID</th>
                     <th>DOWNLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
                     <th>UPLOAD SPEED <span className={styles.unit}>(Mbps)</span></th>
-                    <th>PING <span className={styles.unit}>(ms)</span></th>
                     <th>STATUS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tabList.map((tab) => {
-                    const quality = gq(tab.ping, tab.downloadSpeed, tab.uploadSpeed);
+                    const quality = gq(tab.downloadSpeed, tab.uploadSpeed);
                     return (
                       <tr key={tab.tabId} className={styles.tabRow}>
                         <td className={styles.tabIdVal}>{tab.tabId}</td>
                         <td className={styles.val}>{formatSpeed(tab.downloadSpeed)}</td>
                         <td className={styles.val}>{formatSpeed(tab.uploadSpeed)}</td>
-                        <td className={styles.val}>{tab.ping !== null ? tab.ping + ' ms' : '—'}</td>
                         <td>
                           <div className={styles.statusWrap}>
                             <span className={`${styles.phaseBadge} ${styles[tab.currentPhase]}`}>

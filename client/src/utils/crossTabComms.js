@@ -171,6 +171,9 @@ export function getAggregateMetrics() {
 export function subscribeToMetrics(callback) {
   listeners.push(callback);
   
+  // Immediately notify with current data on subscription
+  callback(allTabsData);
+  
   return () => {
     listeners = listeners.filter(l => l !== callback);
   };

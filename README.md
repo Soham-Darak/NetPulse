@@ -4,6 +4,12 @@ A real-time, professional-grade network diagnostics dashboard built from the gro
 
 ---
 
+## 🎥 Live Demonstration
+
+<video src="./assets/CN_NetPulse_Demo.mp4" controls="controls" muted="muted" width="100%"></video>
+
+---
+
 ## 📌 Ultimate Technical Objectives
 
 This full-stack application was engineered to achieve the following advanced functional goals:

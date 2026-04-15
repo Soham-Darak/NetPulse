@@ -22,10 +22,10 @@ function saveStoredHistory(arr) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(-100)));
 }
 
-export function getQuality(ping, dl, ul) {
-  if (ping === null || dl === null) return 'idle';
-  if (ping < 50  && dl > 20 && (ul ?? 999) > 5)  return 'good';
-  if (ping < 150 && dl > 5  && (ul ?? 999) > 1)  return 'moderate';
+export function getQuality(dl, ul) {
+  if (dl === null) return 'idle';
+  if (dl > 20 && (ul ?? 999) > 5)  return 'good';
+  if (dl > 5  && (ul ?? 999) > 1)  return 'moderate';
   return 'poor';
 }
 
@@ -455,7 +455,7 @@ export function useNetworkMonitor() {
     // Initialize cross-tab communication
     initCrossTabComms();
 
-    // Connection info
+    // ── Fetch connection info from browser API ──────────────────────────
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (conn) {
       setConnectionInfo(prev => ({
@@ -466,18 +466,80 @@ export function useNetworkMonitor() {
       }));
     }
 
-    fetch('https://ipapi.co/json/')
-      .then(r => r.json())
-      .then(data => {
-        setConnectionInfo(prev => ({
-          ...prev,
-          ip: data.ip || null,
-          isp: data.org || null,
-          city: data.city || null,
-          country: data.country_name || null,
-        }));
-      })
-      .catch(() => {});
+    // ── Fetch GeoIP information with retry logic ────────────────────────
+    const fetchGeoIP = async () => {
+      const geoipServices = [
+        'https://ipapi.co/json/',
+        'https://ipinfo.io/json',
+        'https://ip-api.com/json/',
+      ];
+
+      for (const service of geoipServices) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+          const response = await fetch(service, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!response.ok) continue; // Try next service
+
+          const data = await response.json();
+          
+          // Normalize different API response formats
+          let normalizedData = {};
+          
+          if (service.includes('ipapi.co')) {
+            normalizedData = {
+              ip: data.ip,
+              isp: data.org,
+              city: data.city,
+              country: data.country_name,
+            };
+          } else if (service.includes('ipinfo.io')) {
+            normalizedData = {
+              ip: data.ip,
+              isp: data.org,
+              city: data.city,
+              country: data.country,
+            };
+          } else if (service.includes('ip-api.com')) {
+            normalizedData = {
+              ip: data.query,
+              isp: data.isp,
+              city: data.city,
+              country: data.country,
+            };
+          }
+
+          setConnectionInfo(prev => ({
+            ...prev,
+            ip: normalizedData.ip || null,
+            isp: normalizedData.isp || null,
+            city: normalizedData.city || null,
+            country: normalizedData.country || null,
+          }));
+
+          return; // Success, exit loop
+        } catch (err) {
+          console.warn(`[Network] GeoIP service ${service} failed, trying next...`, err.message);
+          continue;
+        }
+      }
+      
+      // All services failed
+      console.error('[Network] All GeoIP services failed. Network information unavailable.');
+      setConnectionInfo(prev => ({
+        ...prev,
+        ip: null,
+        isp: null,
+        city: null,
+        country: null,
+      }));
+    };
+
+    // Call GeoIP fetch immediately
+    fetchGeoIP();
 
     // WebSocket
     try {
@@ -512,13 +574,13 @@ export function useNetworkMonitor() {
     };
   }, []); // run once
 
-  const quality = getQuality(ping, downloadSpeed, uploadSpeed);
+  const quality = getQuality(downloadSpeed, uploadSpeed);
   const elapsedFormatted = formatElapsed(elapsedSeconds);
 
   // ── Broadcast metrics to other tabs ─────────────────────────────────────
   useEffect(() => {
-    const tabQuality = getQuality(ping, downloadSpeed, uploadSpeed);
-    const broadcastTimer = setInterval(() => {
+    const broadcastData = () => {
+      const tabQuality = getQuality(downloadSpeed, uploadSpeed);
       broadcastMetrics(TAB_ID, {
         downloadSpeed,
         uploadSpeed,
@@ -528,10 +590,16 @@ export function useNetworkMonitor() {
         isTesting,
         currentPhase,
       });
-    }, 1000); // Broadcast every second
+    };
+    
+    // Broadcast immediately on first run
+    broadcastData();
+    
+    // Then broadcast every second
+    const broadcastTimer = setInterval(broadcastData, 1000);
 
     return () => clearInterval(broadcastTimer);
-  }, [downloadSpeed, uploadSpeed, ping, connectionInfo, isTesting, currentPhase]);
+  }, [downloadSpeed, uploadSpeed, connectionInfo, isTesting, currentPhase]);
 
   return {
     tabId: TAB_ID,

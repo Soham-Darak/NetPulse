@@ -88,3 +88,17 @@
   .grid { grid-template-columns: 1fr; }
   .item { border-right: none; }
 }
+
+.loadingPlaceholder {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

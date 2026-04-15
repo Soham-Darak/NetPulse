@@ -74,7 +74,7 @@ function SpeedTestBreakdown({ speedTestData }) {
   const items = [
     { label: 'Download Tests', bytes: speedTestData.download, icon: <Download size={16}/>, color: '#38bdf8' },
     { label: 'Upload Tests', bytes: speedTestData.upload, icon: <Upload size={16}/>, color: '#4ade80' },
-    { label: 'Response Time Tests', bytes: speedTestData.ping, icon: <Activity size={16}/>, color: '#a855f7' },
+    // { label: 'Response Time Tests', bytes: speedTestData.ping, icon: <Activity size={16}/>, color: '#a855f7' },
   ];
 
   const total = speedTestData.total || 1;
@@ -475,7 +475,7 @@ export default function DataUsage({ tracker }) {
       <DataSummary
         totalIncoming={totalIncoming}
         totalOutgoing={totalOutgoing}
-        requestCount={requests.length}
+        requestCount={Object.values(byCategory).reduce((sum, cat) => sum + (cat.count || 0), 0)}
         dataRate={dataRate}
         speedTestData={speedTestData}
       />
